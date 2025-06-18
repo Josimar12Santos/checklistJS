@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="transition duration-300 ease-in-out">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Carregando Checklist...</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex items-center justify-center p-4 transition duration-300 ease-in-out font-sans">
+
+  <!-- Botão de Modo Escuro -->
+  <!-- Botão de Modo Escuro/Claro com ícones -->
+<button id="darkModeToggle" class="fixed top-4 right-4 z-50 flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-full shadow hover:bg-indigo-700 transition">
+  <span id="themeIcon">🌙</span>
+</button>
+
+
+  <div class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <h1 id="checklistTitle" class="text-3xl font-bold text-center mb-6">Carregando...</h1>
+
+    <form id="checklistForm" class="space-y-4">
+      <div id="questionsContainer" class="space-y-4"></div>
+
+      <div class="mt-6">
+        <label for="observacoes" class="block text-lg font-semibold mb-2">Observações Adicionais:</label>
+        <textarea id="observacoes" name="observacoes" rows="4" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-y" placeholder="Adicione quaisquer notas ou comentários aqui..."></textarea>
+      </div>
+
+      <button type="submit" id="saveCsvButton" class="w-full mt-6 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        Salvar Checklist
+      </button>
+    </form>
+  </div>
+
+  <script src="checklistData.js"></script>
+  <script>
+    const htmlElement = document.documentElement;
+const toggleButton = document.getElementById("darkModeToggle");
+const themeIcon = document.getElementById("themeIcon");
+
+// Define ícone inicial com base no tema atual
+function updateThemeIcon() {
+  const isDark = htmlElement.classList.contains("dark");
+  themeIcon.textContent = isDark ? "🌞" : "🌙";
+}
+
+toggleButton.addEventListener("click", () => {
+  htmlElement.classList.toggle("dark");
+  updateThemeIcon();
+});
+
+// Atualiza o ícone ao carregar
+updateThemeIcon();
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const checklistForm = document.getElementById('checklistForm');
+      const checklistTitle = document.getElementById('checklistTitle');
+      const questionsContainer = document.getElementById('questionsContainer');
+      const pageTitle = document.getElementById('pageTitle');
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const equipamentoId = urlParams.get('equipamento');
+      let currentEquipmentData = null;
+
+      if (equipamentoId) {
+        currentEquipmentData = EQUIPMENT_CHECKLISTS[equipamentoId.toUpperCase()];
+        if (currentEquipmentData) {
+          checklistTitle.textContent = `Checklist: ${currentEquipmentData.name}`;
+          pageTitle.textContent = `Checklist: ${currentEquipmentData.name}`;
+
+          currentEquipmentData.questions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600';
+
+            const label = document.createElement('label');
+            label.htmlFor = q.id;
+            label.className = 'text-lg mb-2 sm:mb-0 font-medium flex-1';
+            label.textContent = `${index + 1}. ${q.text}`;
+
+            const radioGroupDiv = document.createElement('div');
+            radioGroupDiv.className = 'flex items-center space-x-4';
+
+            const inputOk = document.createElement('input');
+            inputOk.type = 'radio';
+            inputOk.id = `${q.id}_ok`;
+            inputOk.name = q.id;
+            inputOk.value = 'OK';
+            inputOk.required = true;
+
+            const labelOk = document.createElement('label');
+            labelOk.htmlFor = `${q.id}_ok`;
+            labelOk.textContent = 'OK';
+            labelOk.className = 'text-green-600 dark:text-green-400 font-semibold flex items-center space-x-1';
+
+            const inputNok = document.createElement('input');
+            inputNok.type = 'radio';
+            inputNok.id = `${q.id}_nok`;
+            inputNok.name = q.id;
+            inputNok.value = 'NOK';
+            inputNok.required = true;
+
+            const labelNok = document.createElement('label');
+            labelNok.htmlFor = `${q.id}_nok`;
+            labelNok.textContent = 'NOK';
+            labelNok.className = 'text-red-600 dark:text-red-400 font-semibold flex items-center space-x-1';
+
+            radioGroupDiv.appendChild(inputOk);
+            radioGroupDiv.appendChild(labelOk);
+            radioGroupDiv.appendChild(inputNok);
+            radioGroupDiv.appendChild(labelNok);
+
+            questionDiv.appendChild(label);
+            questionDiv.appendChild(radioGroupDiv);
+            questionsContainer.appendChild(questionDiv);
+          });
+
+        } else {
+          checklistTitle.textContent = 'Equipamento Não Encontrado';
+          pageTitle.textContent = 'Erro - Equipamento Não Encontrado';
+          questionsContainer.innerHTML = `<p class="text-red-600 dark:text-red-400 text-center">Não foi possível encontrar o checklist para o equipamento ID: <strong>${equipamentoId}</strong>.</p>`;
+          disableForm();
+        }
+      } else {
+        checklistTitle.textContent = 'Nenhum Equipamento Especificado';
+        pageTitle.textContent = 'Erro - Nenhum Equipamento Especificado';
+        questionsContainer.innerHTML = '<p class="text-red-600 dark:text-red-400 text-center">Nenhum ID de equipamento foi fornecido na URL.</p>';
+        disableForm();
+      }
+
+      function disableForm() {
+        document.getElementById('observacoes').disabled = true;
+        document.getElementById('saveCsvButton').disabled = true;
+        document.getElementById('saveCsvButton').classList.add('opacity-50', 'cursor-not-allowed');
+      }
+
+      checklistForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(checklistForm);
+        const data = {
+          ID_Equipamento: equipamentoId || 'N/A',
+          Nome_Equipamento: currentEquipmentData?.name || 'N/A',
+          Data_Hora_Preenchimento: new Date().toLocaleString('pt-BR'),
+          Observacoes: formData.get('observacoes') || ''
+        };
+
+        currentEquipmentData?.questions.forEach(q => {
+          data[q.id] = formData.get(q.id);
+        });
+
+        const headers = ['ID_Equipamento', 'Nome_Equipamento', 'Data_Hora_Preenchimento'];
+        currentEquipmentData?.questions.forEach(q => headers.push(q.id));
+        headers.push('Observacoes');
+
+        const escapeCsvValue = value => {
+          let v = String(value);
+          return v.includes(',') || v.includes('"') || v.includes('\n')
+            ? `"${v.replace(/"/g, '""')}"`
+            : v;
+        };
+
+        const csvContent =
+          headers.map(escapeCsvValue).join(',') + '\n' +
+          headers.map(h => escapeCsvValue(data[h] || '')).join(',');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const now = new Date();
+        link.href = URL.createObjectURL(blob);
+        link.download = `checklist_${equipamentoId || 'generico'}_${now.toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        alert('Checklist salvo com sucesso!');
+        window.location.href = 'qrcode.html';
+      });
+    });
+  </script>
+</body>
+</html>
