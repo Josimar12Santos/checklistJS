@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Checklist</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen px-4">
+  <div class="max-w-sm w-full bg-white shadow-lg rounded-lg p-6">
+    <h2 class="text-2xl font-bold text-center mb-6">Acesso ao Sistema</h2>
+    
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label for="username" class="block text-sm font-semibold mb-1">Usuário</label>
+        <input type="text" id="username" name="username" required
+          class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-semibold mb-1">Senha</label>
+        <input type="password" id="password" name="password" required
+          class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+      </div>
+      <button type="submit"
+        class="w-full bg-indigo-600 text-white py-3 rounded font-semibold hover:bg-indigo-700 transition">
+        Entrar
+      </button>
+    </form>
+
+    <div id="adminPanel" class="mt-6 hidden">
+      <h3 class="font-semibold mb-2">Cadastro de novo usuário</h3>
+      <form id="registerForm" class="space-y-3">
+        <input type="text" id="newUsername" placeholder="Novo usuário"
+          class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-indigo-500 focus:outline-none" required/>
+        <input type="password" id="newPassword" placeholder="Nova senha"
+          class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-indigo-500 focus:outline-none" required/>
+        <button type="submit"
+          class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 font-semibold">
+          Cadastrar
+        </button>
+      </form>
+    </div>
+
+    <p id="errorMsg" class="text-red-600 text-center mt-4 hidden">Erro no login.</p>
+  </div>
+
+  <script>
+    // Usuário admin fixo
+    const adminUser = 'admin';
+    const adminPass = 'admin123';
+
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const adminPanel = document.getElementById('adminPanel');
+
+    // Carrega usuários do localStorage ou inicia vazio
+    let users = JSON.parse(localStorage.getItem('users')) || {};
+
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = e.target.username.value.trim();
+      const password = e.target.password.value;
+
+      if ((username === adminUser && password === adminPass) ||
+          (users[username] && users[username] === password)) {
+
+        localStorage.setItem('loggedUser', username);
+
+        if (username === adminUser) {
+          adminPanel.classList.remove('hidden');
+        } else {
+          window.location.href = 'qrcode.html'; // redireciona para scanner
+        }
+
+      } else {
+        errorMsg.classList.remove('hidden');
+        errorMsg.textContent = 'Usuário ou senha incorretos.';
+      }
+    });
+
+    registerForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const newUser = document.getElementById('newUsername').value.trim();
+      const newPass = document.getElementById('newPassword').value;
+
+      if (!newUser || !newPass) {
+        alert('Preencha todos os campos.');
+        return;
+      }
+
+      if (users[newUser] || newUser === adminUser) {
+        alert('Usuário já existe.');
+        return;
+      }
+
+      users[newUser] = newPass;
+      localStorage.setItem('users', JSON.stringify(users));
+      alert('Usuário cadastrado com sucesso.');
+      registerForm.reset();
+    });
+  </script>
+</body>
+</html>
